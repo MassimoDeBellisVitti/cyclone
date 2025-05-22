@@ -1,45 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Wind Planner</title>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
-    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-      }
-      textarea {
-        width: 100%;
-        height: 300px;
-        font-family: monospace;
-      }
-      button {
-        margin-top: 10px;
-        padding: 10px 20px;
-        font-size: 16px;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Wind Planner GUI</h1>
+<head>
+  <meta charset="UTF-8" />
+  <title>Wind Planner GUI</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+    }
+    label {
+      display: inline-block;
+      width: 120px;
+      margin-right: 10px;
+    }
+    input {
+      margin-bottom: 10px;
+      width: 100px;
+    }
+    .section {
+      border: 1px solid #000;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    .layer-list {
+      margin-top: 10px;
+    }
+    .layer-item {
+      background-color: #f0f0f0;
+      padding: 8px 12px;
+      border-left: 5px solid #007acc;
+      margin-bottom: 8px;
+      font-family: monospace;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 12px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
 
-    <form id="wind-form">
-      <label for="json-input">Paste your .wind JSON below:</label><br />
-      <textarea id="json-input" placeholder='{ "layers": [ ... ], "mandrelParameters": ... }'></textarea><br />
-      <button type="submit">Generate G-code</button>
-    </form>
+  <h1>Wind Planner GUI</h1>
 
+  <form id="wind-form">
+    <!-- Mandrel parameters -->
+    <div class="section">
+      <strong>Mandrel parameters (in mm)</strong><br />
+      <label for="mandrel-diameter">Diameter</label>
+      <input type="number" id="mandrel-diameter" value="60" required />
+      <label for="mandrel-length">Wind Length</label>
+      <input type="number" id="mandrel-length" value="590" required />
+    </div>
+
+    <!-- Tow parameters -->
+    <div class="section">
+      <strong>Tow parameters (in mm)</strong><br />
+      <label for="tow-width">Width</label>
+      <input type="number" id="tow-width" value="7" required />
+      <label for="tow-thickness">Thickness</label>
+      <input type="number" id="tow-thickness" value="0.5" step="0.1" required />
+    </div>
+
+    <!-- Feed rate -->
+    <div class="section">
+      <label for="feed-rate"><strong>Feed Rate</strong></label>
+      <input type="number" id="feed-rate" value="2000" required />
+    </div>
+
+    <!-- Layer configuration -->
+    <div class="section">
+      <strong>Layers configuration:</strong><br />
+      <button type="button" id="add-hoop">➕ Add Hoop</button>
+      <button type="button" id="add-helical">➕ Add Helical</button>
+
+      <p style="margin-top: 10px;"><strong>Current layers:</strong></p>
+      <div id="layers" class="layer-list"></div>
+    </div>
+
+    <button type="submit">✅ Generate G-code</button>
     <div id="status-message" style="margin-top: 15px; color: green;"></div>
+  </form>
 
-    <!-- Optional version display -->
-    <p style="margin-top: 40px; font-size: 12px; color: #666;">
-      Node.js: <span id="node-version"></span> |
-      Chromium: <span id="chrome-version"></span> |
-      Electron: <span id="electron-version"></span>
-    </p>
-
-    <script src="./dist/renderer.js"></script>
-  </body>
+  <script src="./dist/renderer.js"></script>
+</body>
 </html>
