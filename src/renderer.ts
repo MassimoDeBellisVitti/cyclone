@@ -10,6 +10,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const layersContainer = document.getElementById('layers') as HTMLDivElement;
   const layers: any[] = [];
 
+  const removeLastBtn = document.getElementById('remove-last') as HTMLButtonElement;
+
   // 🌀 Add Hoop layer
   hoopBtn.addEventListener('click', () => {
     const layer = { windType: "hoop", terminal: false };
@@ -47,6 +49,15 @@ window.addEventListener('DOMContentLoaded', () => {
     layersContainer.appendChild(div);
 
     helicalModal.style.display = 'none';
+  });
+
+    // 🧹 Remove Last Layer
+  removeLastBtn.addEventListener('click', () => {
+    if (layers.length > 0) {
+      layers.pop(); // Remove from internal list
+      const lastChild = layersContainer.lastElementChild;
+      if (lastChild) layersContainer.removeChild(lastChild); // Remove from UI
+    }
   });
 
   // ✅ On submit: gather all fields and generate final JSON
