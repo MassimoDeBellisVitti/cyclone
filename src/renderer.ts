@@ -1,39 +1,103 @@
-// This file is required by the index.html file and will
-// be executed in the renderer process for that window.
-// No Node.js APIs are available in this process unless
-// nodeIntegration is set to true in webPreferences.
-// Use preload.js to selectively enable features
-// needed in the renderer process.
-
-
-// This script runs in the renderer process and interacts with the DOM.
-// It uses the secure `window.api` exposed by preload.js to communicate with the main process.
-
 window.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('wind-form') as HTMLFormElement;
-    const input = document.getElementById('json-input') as HTMLTextAreaElement;
-    const status = document.getElementById('status-message') as HTMLDivElement;
-  
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-  
-      try {
-        const jsonText = input.value.trim();
-        console.log("User input:", jsonText);
-  
-        // Validate JSON before sending
-        JSON.parse(jsonText);
-  
-        // Call backend via secure API (from preload)
-        // @ts-ignore
-        window.api.generateGcodeFromContent(jsonText, 'output.gcode');
-  
-        status.textContent = '✅ G-code generation started...';
-        status.style.color = 'green';
-      } catch (error: any) {
-        console.error("JSON parse error:", error.message);
-        status.textContent = '❌ Invalid JSON input: ' + error.message;
-        status.style.color = 'red';
-      }
-    });
+  const form = document.getElementById('wind-form') as HTMLFormElement;
+  const status = document.getElementById('status-message') as HTMLDivElement;
+
+  const hoopBtn = document.getElementById('add-hoop') as HTMLButtonElement;
+  const helicalBtn = document.getElementById('add-helical') as HTMLButtonElement;
+  const confirmHelicalBtn = document.getElementById('confirm-helical') as HTMLButtonElement;
+  const helicalModal = document.getElementById('helical-modal') as HTMLDivElement;
+
+  const layersContainer = document.getElementById('layers') as HTMLDivElement;
+  const layers: any[] = [];
+
+  const removeLastBtn = document.getElementById('remove-last') as HTMLButtonElement;
+
+  // 🌀 Add Hoop layer
+  hoopBtn.addEventListener('click', () => {
+    const layer = { windType: "hoop", terminal: false };
+    layers.push(layer);
+
+    const div = document.createElement('div');
+    div.className = 'layer-item';
+    div.innerText = `🌀 Hoop layer (${layers.length}) added`;
+    layersContainer.appendChild(div);
   });
+
+  // 🔁 Show Helical Modal
+  helicalBtn.addEventListener('click', () => {
+    helicalModal.style.display = 'block';
+  });
+
+  // 🔁 Confirm and Add Helical Layer
+  confirmHelicalBtn.addEventListener('click', () => {
+    const layer = {
+      windType: "helical",
+      windAngle: parseFloat((document.getElementById('helical-angle') as HTMLInputElement).value),
+      patternNumber: parseInt((document.getElementById('helical-pattern') as HTMLInputElement).value),
+      skipIndex: parseInt((document.getElementById('helical-skip') as HTMLInputElement).value),
+      lockDegrees: parseInt((document.getElementById('helical-lock') as HTMLInputElement).value),
+      leadInMM: parseInt((document.getElementById('helical-leadin') as HTMLInputElement).value),
+      leadOutDegrees: parseInt((document.getElementById('helical-leadout') as HTMLInputElement).value),
+      skipInitialNearLock: (document.getElementById('helical-skipnearlock') as HTMLInputElement).checked
+    };
+
+    layers.push(layer);
+
+    const div = document.createElement('div');
+    div.className = 'layer-item';
+    div.innerText = `🔁 Helical layer: ${JSON.stringify(layer)}`;
+    layersContainer.appendChild(div);
+
+    helicalModal.style.display = 'none';
+  });
+
+    // 🧹 Remove Last Layer
+  removeLastBtn.addEventListener('click', () => {
+    if (layers.length > 0) {
+      layers.pop(); // Remove from internal list
+      const lastChild = layersContainer.lastElementChild;
+      if (lastChild) layersContainer.removeChild(lastChild); // Remove from UI
+    }
+  });
+
+  // ✅ On submit: gather all fields and generate final JSON
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    try {
+      // Read values from inputs
+      const mandrelDiameter = parseFloat((document.getElementById('mandrel-diameter') as HTMLInputElement).value);
+      const mandrelLength = parseFloat((document.getElementById('mandrel-length') as HTMLInputElement).value);
+      const towWidth = parseFloat((document.getElementById('tow-width') as HTMLInputElement).value);
+      const towThickness = parseFloat((document.getElementById('tow-thickness') as HTMLInputElement).value);
+      const feedRate = parseFloat((document.getElementById('feed-rate') as HTMLInputElement).value);
+
+      // Compose final JSON
+      const windJson = {
+        layers: layers,
+        mandrelParameters: {
+          diameter: mandrelDiameter,
+          windLength: mandrelLength
+        },
+        towParameters: {
+          width: towWidth,
+          thickness: towThickness
+        },
+        defaultFeedRate: feedRate
+      };
+
+      // Debug log
+      console.log("Generated JSON:", windJson);
+
+      // Call backend via secure API
+      // @ts-ignore
+      window.api.generateGcodeFromContent(JSON.stringify(windJson), 'output.gcode');
+
+      status.textContent = '✅ G-code generation started...';
+      status.style.color = 'green';
+    } catch (err: any) {
+      status.textContent = '❌ Error: ' + err.message;
+      status.style.color = 'red';
+    }
+  });
+});
