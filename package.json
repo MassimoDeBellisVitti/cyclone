@@ -1,14 +1,14 @@
 {
   "name": "gcode-planner",
   "version": "1.0.0",
+  "description": "Electron-based G-code planner application for Windows",
   "main": "dist/main.js",
   "author": "Tuo Nome",
   "license": "MIT",
   "scripts": {
     "start": "electron .",
     "build": "tsc",
-    "make": "electron-builder",
-    "dist": "electron-builder --publish=never"
+    "dist": "electron-builder --windows --x64 --publish=never"
   },
   "devDependencies": {
     "electron": "^28.2.3",
@@ -24,13 +24,13 @@
       "preload.js",
       "package.json"
     ],
-    "mac": {
-      "target": ["dmg", "zip"],
-      "fileSystem": "HFS+",
-      "category": "public.app-category.graphics-design"
-    },
     "win": {
-      "target": ["nsis", "zip"]
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
     }
   }
 }
