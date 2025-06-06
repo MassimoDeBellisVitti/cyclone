@@ -12,7 +12,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const removeLastBtn = document.getElementById('remove-last') as HTMLButtonElement;
 
-  // 🌀 Add Hoop layer
+  // ➕ Add Hoop layer
   hoopBtn.addEventListener('click', () => {
     const layer = { windType: "hoop", terminal: false };
     layers.push(layer);
@@ -23,12 +23,12 @@ window.addEventListener('DOMContentLoaded', () => {
     layersContainer.appendChild(div);
   });
 
-  // 🔁 Show Helical Modal
+  // 🔁 Show Helical modal
   helicalBtn.addEventListener('click', () => {
     helicalModal.style.display = 'block';
   });
 
-  // 🔁 Confirm and Add Helical Layer
+  // 🔁 Confirm Helical layer
   confirmHelicalBtn.addEventListener('click', () => {
     const layer = {
       windType: "helical",
@@ -51,53 +51,81 @@ window.addEventListener('DOMContentLoaded', () => {
     helicalModal.style.display = 'none';
   });
 
-    // 🧹 Remove Last Layer
+  // ❌ Remove last layer
   removeLastBtn.addEventListener('click', () => {
     if (layers.length > 0) {
-      layers.pop(); // Remove from internal list
+      layers.pop();
       const lastChild = layersContainer.lastElementChild;
-      if (lastChild) layersContainer.removeChild(lastChild); // Remove from UI
+      if (lastChild) layersContainer.removeChild(lastChild);
     }
   });
 
-  // ✅ On submit: gather all fields and generate final JSON
+  // ✅ Submit form to generate and send JSON to backend (automatic output)
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
 
     try {
-      // Read values from inputs
       const mandrelDiameter = parseFloat((document.getElementById('mandrel-diameter') as HTMLInputElement).value);
       const mandrelLength = parseFloat((document.getElementById('mandrel-length') as HTMLInputElement).value);
       const towWidth = parseFloat((document.getElementById('tow-width') as HTMLInputElement).value);
       const towThickness = parseFloat((document.getElementById('tow-thickness') as HTMLInputElement).value);
       const feedRate = parseFloat((document.getElementById('feed-rate') as HTMLInputElement).value);
 
-      // Compose final JSON
       const windJson = {
-        layers: layers,
-        mandrelParameters: {
-          diameter: mandrelDiameter,
-          windLength: mandrelLength
-        },
-        towParameters: {
-          width: towWidth,
-          thickness: towThickness
-        },
+        layers,
+        mandrelParameters: { diameter: mandrelDiameter, windLength: mandrelLength },
+        towParameters: { width: towWidth, thickness: towThickness },
         defaultFeedRate: feedRate
       };
 
-      // Debug log
-      console.log("Generated JSON:", windJson);
-
-      // Call backend via secure API
       // @ts-ignore
       window.api.generateGcodeFromContent(JSON.stringify(windJson), 'output.gcode');
 
-      status.textContent = '✅ G-code generation started...';
+      status.textContent = '✅ G-code generation started (saved to output.gcode)...';
       status.style.color = 'green';
     } catch (err: any) {
       status.textContent = '❌ Error: ' + err.message;
       status.style.color = 'red';
     }
   });
+
+  // 💾 Manual Save G-code with dialog
+  const saveButton = document.getElementById("saveButton") as HTMLButtonElement;
+  if (saveButton) {
+    saveButton.addEventListener("click", async () => {
+      const mandrelDiameter = parseFloat((document.getElementById('mandrel-diameter') as HTMLInputElement).value);
+      const mandrelLength = parseFloat((document.getElementById('mandrel-length') as HTMLInputElement).value);
+      const towWidth = parseFloat((document.getElementById('tow-width') as HTMLInputElement).value);
+      const towThickness = parseFloat((document.getElementById('tow-thickness') as HTMLInputElement).value);
+      const feedRate = parseFloat((document.getElementById('feed-rate') as HTMLInputElement).value);
+
+      const windJson = {
+        layers,
+        mandrelParameters: { diameter: mandrelDiameter, windLength: mandrelLength },
+        towParameters: { width: towWidth, thickness: towThickness },
+        defaultFeedRate: feedRate
+      };
+
+      const jsonContent = JSON.stringify(windJson, null, 2);
+
+      // @ts-ignore
+      const result = await window.api.generateAndReturnGcode(jsonContent);
+
+      if (result.success) {
+        // @ts-ignore
+        const filePath = await window.api.openSaveDialog("output.gcode");
+        if (filePath) {
+          // @ts-ignore
+          const saveRes = await window.api.saveFile(filePath, result.gcode);
+          if (saveRes.success) {
+            alert("✅ G-code saved successfully!");
+          } else {
+            alert("❌ Failed to save G-code: " + saveRes.error);
+          }
+        }
+      } else {
+        alert("❌ G-code generation failed: " + result.error);
+      }
+    });
+  }
 });

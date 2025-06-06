@@ -1,17 +1,25 @@
-// All Node.js APIs are available in the preload process.
-// This environment runs in the same sandbox as a Chrome extension.
-
 import { contextBridge, ipcRenderer } from 'electron';
 
-// Expose a secure API to the renderer process
 contextBridge.exposeInMainWorld('api', {
-  // New method: send JSON content directly to main process
+  // Opens a save dialog and returns the selected file path
+  openSaveDialog: (): Promise<string | null> => {
+    return ipcRenderer.invoke('dialog:saveFile');
+  },
+
+  // Saves content to a file at the given path
+  saveFile: (filePath: string, content: string): Promise<{ success: boolean; error?: string }> => {
+    return ipcRenderer.invoke('file:save', filePath, content);
+  },
+
+  // Sends JSON content and output path to the main process to generate G-code
   generateGcodeFromContent: (jsonContent: string, outputPath: string) => {
     ipcRenderer.send('generate-gcode-from-content', { jsonContent, outputPath });
-  }
+  },
+
+  generateAndReturnGcode: (jsonContent: string) => ipcRenderer.invoke('generate-and-return-gcode', { jsonContent }),
 });
 
-// Optional: Replace version placeholders in the DOM (if present)
+// Optionally replace version placeholders in the DOM
 window.addEventListener('DOMContentLoaded', () => {
   const replaceTextContent = (selector: string, text: string) => {
     const element = document.getElementById(selector);
