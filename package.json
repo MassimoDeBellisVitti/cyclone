@@ -1,72 +1,32 @@
 {
-  "name": "cyclone",
+  "name": "gcode-planner",
   "version": "1.0.0",
-  "description": "Control software for Marlin-driven filament winders",
   "main": "dist/main.js",
-  "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w",
-    "lint": "eslint -c .eslintrc --ext .ts ./src",
-    "start": "electron .",
-    "cli": "npm run build && node ./dist/cli-entry.js",
-    "package": "electron-builder --mac",
-    "make": "electron-builder --mac",
-    "release": "electron-builder --mac --publish never"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/reilleya/cyclone.git"
-  },
-  "keywords": [
-    "cnc",
-    "composites",
-    "marlin"
-  ],
-  "author": "Andrew Reilley",
+  "author": "Tuo Nome",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/reilleya/cyclone/issues"
-  },
-  "homepage": "https://github.com/reilleya/cyclone#readme",
-  "dependencies": {
-    "canvas": "^3.1.0",
-    "electron-squirrel-startup": "^1.0.1",
-    "serialport": "^10.3.0",
-    "yargs": "^17.3.1"
+  "scripts": {
+    "start": "electron .",
+    "build": "tsc",
+    "make": "electron-builder"
   },
   "devDependencies": {
-    "electron": "^36.2.1",
-    "electron-builder": "^26.0.12",
-    "typescript": "^4.9.5",
-    "eslint": "^7.32.0",
-    "@typescript-eslint/eslint-plugin": "^4.33.0",
-    "@typescript-eslint/parser": "^4.33.0",
-    "@types/node": "^22.9.0",
-    "@types/yargs": "^17.0.8",
-    "webpack": "^5.99.9",
-    "webpack-cli": "^6.0.1"
+    "electron": "^28.2.3",
+    "electron-builder": "^24.14.1",
+    "typescript": "^5.4.0"
   },
   "build": {
-    "appId": "com.cyclone.app",
-    "productName": "Cyclone",
+    "appId": "com.tuonome.gcodeplanner",
+    "productName": "Gcode Planner",
     "files": [
       "dist/**/*",
       "index.html",
-      "main.js",
       "preload.js",
-      "assets/**/*"
+      "package.json"
     ],
-    "directories": {
-      "buildResources": "assets"
-    },
     "mac": {
-      "target": "dmg"
-    },
-    "win": {
-      "target": "nsis"
-    },
-    "linux": {
-      "target": "AppImage"
+      "target": "dmg",
+      "fileSystem": "HFS+",
+      "category": "public.app-category.graphics-design"
     }
   }
 }

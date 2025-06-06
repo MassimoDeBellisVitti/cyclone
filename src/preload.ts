@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-contextBridge.exposeInMainWorld('api', {
+contextBridge.exposeInMainWorld('electronAPI', {
   // Opens a save dialog and returns the selected file path
   openSaveDialog: (): Promise<string | null> => {
     return ipcRenderer.invoke('dialog:saveFile');
@@ -11,15 +11,18 @@ contextBridge.exposeInMainWorld('api', {
     return ipcRenderer.invoke('file:save', filePath, content);
   },
 
-  // Sends JSON content and output path to the main process to generate G-code
-  generateGcodeFromContent: (jsonContent: string, outputPath: string) => {
-    ipcRenderer.send('generate-gcode-from-content', { jsonContent, outputPath });
+  // Generates and saves G-code from a wind JSON object
+  generateGcode: (windJson: object, outputPath: string): Promise<{ success: boolean; error?: string }> => {
+    return ipcRenderer.invoke('generate-gcode', windJson, outputPath);
   },
 
-  generateAndReturnGcode: (jsonContent: string) => ipcRenderer.invoke('generate-and-return-gcode', { jsonContent }),
+  // Generates G-code from a wind JSON object and returns it as a string
+  generateAndReturnGcode: (windJson: object): Promise<{ success: boolean; gcode?: string; error?: string }> => {
+    return ipcRenderer.invoke('generate-and-return-gcode', windJson);
+  }
 });
 
-// Optionally replace version placeholders in the DOM
+// Optionally insert version info into the DOM
 window.addEventListener('DOMContentLoaded', () => {
   const replaceTextContent = (selector: string, text: string) => {
     const element = document.getElementById(selector);

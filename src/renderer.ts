@@ -1,3 +1,12 @@
+interface ElectronAPI {
+  openSaveDialog: (defaultPath?: string) => Promise<string | null>;
+  saveFile: (filePath: string, content: string) => Promise<{ success: boolean; error?: string }>;
+  generateGcode: (windJson: object, outputPath: string) => Promise<{ success: boolean; error?: string }>;
+  generateAndReturnGcode: (windJson: object) => Promise<{ success: boolean; gcode?: string; error?: string }>;
+}
+
+const electronAPI = (window as any).electronAPI as ElectronAPI;
+
 window.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('wind-form') as HTMLFormElement;
   const status = document.getElementById('status-message') as HTMLDivElement;
@@ -12,9 +21,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const removeLastBtn = document.getElementById('remove-last') as HTMLButtonElement;
 
-  // ➕ Add Hoop layer
+  // ➕ Add a Hoop layer
   hoopBtn.addEventListener('click', () => {
-    const layer = { windType: "hoop", terminal: false };
+    const layer = { windType: 'hoop', terminal: false };
     layers.push(layer);
 
     const div = document.createElement('div');
@@ -23,15 +32,15 @@ window.addEventListener('DOMContentLoaded', () => {
     layersContainer.appendChild(div);
   });
 
-  // 🔁 Show Helical modal
+  // 🔁 Open the Helical modal
   helicalBtn.addEventListener('click', () => {
     helicalModal.style.display = 'block';
   });
 
-  // 🔁 Confirm Helical layer
+  // 🔁 Confirm and add a Helical layer
   confirmHelicalBtn.addEventListener('click', () => {
     const layer = {
-      windType: "helical",
+      windType: 'helical',
       windAngle: parseFloat((document.getElementById('helical-angle') as HTMLInputElement).value),
       patternNumber: parseInt((document.getElementById('helical-pattern') as HTMLInputElement).value),
       skipIndex: parseInt((document.getElementById('helical-skip') as HTMLInputElement).value),
@@ -51,7 +60,7 @@ window.addEventListener('DOMContentLoaded', () => {
     helicalModal.style.display = 'none';
   });
 
-  // ❌ Remove last layer
+  // ❌ Remove the last added layer
   removeLastBtn.addEventListener('click', () => {
     if (layers.length > 0) {
       layers.pop();
@@ -60,7 +69,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ✅ Submit form to generate and send JSON to backend (automatic output)
+  // ✅ Auto-generate G-code and save it to "output.gcode"
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
 
@@ -78,21 +87,25 @@ window.addEventListener('DOMContentLoaded', () => {
         defaultFeedRate: feedRate
       };
 
-      // @ts-ignore
-      window.api.generateGcodeFromContent(JSON.stringify(windJson), 'output.gcode');
+      const result = await electronAPI.generateGcode(windJson, 'output.gcode');
 
-      status.textContent = '✅ G-code generation started (saved to output.gcode)...';
-      status.style.color = 'green';
+      if (result.success) {
+        status.textContent = '✅ G-code generation started (saved to output.gcode)...';
+        status.style.color = 'green';
+      } else {
+        status.textContent = '❌ Error: ' + result.error;
+        status.style.color = 'red';
+      }
     } catch (err: any) {
       status.textContent = '❌ Error: ' + err.message;
       status.style.color = 'red';
     }
   });
 
-  // 💾 Manual Save G-code with dialog
-  const saveButton = document.getElementById("saveButton") as HTMLButtonElement;
+  // 💾 Generate G-code and let the user choose where to save it
+  const saveButton = document.getElementById('saveButton') as HTMLButtonElement;
   if (saveButton) {
-    saveButton.addEventListener("click", async () => {
+    saveButton.addEventListener('click', async () => {
       const mandrelDiameter = parseFloat((document.getElementById('mandrel-diameter') as HTMLInputElement).value);
       const mandrelLength = parseFloat((document.getElementById('mandrel-length') as HTMLInputElement).value);
       const towWidth = parseFloat((document.getElementById('tow-width') as HTMLInputElement).value);
@@ -106,25 +119,20 @@ window.addEventListener('DOMContentLoaded', () => {
         defaultFeedRate: feedRate
       };
 
-      const jsonContent = JSON.stringify(windJson, null, 2);
+      const result = await electronAPI.generateAndReturnGcode(windJson);
 
-      // @ts-ignore
-      const result = await window.api.generateAndReturnGcode(jsonContent);
-
-      if (result.success) {
-        // @ts-ignore
-        const filePath = await window.api.openSaveDialog("output.gcode");
+      if (result.success && result.gcode) {
+        const filePath = await electronAPI.openSaveDialog('output.gcode');
         if (filePath) {
-          // @ts-ignore
-          const saveRes = await window.api.saveFile(filePath, result.gcode);
+          const saveRes = await electronAPI.saveFile(filePath, result.gcode);
           if (saveRes.success) {
-            alert("✅ G-code saved successfully!");
+            alert('✅ G-code saved successfully!');
           } else {
-            alert("❌ Failed to save G-code: " + saveRes.error);
+            alert('❌ Failed to save G-code: ' + saveRes.error);
           }
         }
       } else {
-        alert("❌ G-code generation failed: " + result.error);
+        alert('❌ G-code generation failed: ' + result.error);
       }
     });
   }
