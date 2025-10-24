@@ -20,6 +20,43 @@ These changes ensure that the generated G-code is fully compatible with our mach
 
 ---
 
+New — Electron Standalone Application (this fork)
+---
+
+In this fork, we developed a graphical interface (GUI) based on Electron that integrates all the features of Cyclone, allowing users to generate and execute filament winding G-code without relying on command-line scripts.
+
+Two versions of the project are available:
+	•	The main branch is designed for macOS.
+	•	The windows-build branch is designed for Windows.
+
+Both versions include the same commands and functionalities, but are optimized for their respective platforms.
+
+How to get started
+	1.	Clone the repository and switch to the correct branch for your operating system:
+
+For macOS:
+```
+git checkout main
+```
+
+For Windows:
+```
+git checkout windows-build
+```
+Build the standalone executable:
+```
+npm install
+npm start
+npm run make
+```
+
+
+After the build process, the generated standalone application will be located inside the out/make/ directory.
+	•	On macOS, the output will be a .app bundle.
+	•	On Windows, the output will be an .exe installer.
+
+This Electron integration is a custom addition introduced in this fork to make Cyclone easier to use on our filament winding machine. The original Node.js command-line method is still available but is now considered deprecated in this version.
+
 Deprecated (legacy method) Download and Setup 
 -------
 Cyclone is currently provided ony as the source code, which can be cloned or downloaded from this repository. The script requires [node.js](https://nodejs.org/)) to run. Once node.js is installed and Cyclone is downloaded, navigate to the Cyclone directory in a terminal and install its dependencies with: 
@@ -109,7 +146,7 @@ The most commonly changed parameters are `"windAngle"`(in degrees), and `"patter
 `"mandrelParameters"` includes the mandrel diameter, and the length of the mandrel that you would like to wind on. The actual length of usuable tube will be less than this due to the "locks" (excess build up of material at either end of the tube where the carriage turns around) which are usually cut off.
 
 
-Executing a Toolpath
+Deprecated (legacy method) Executing a Toolpath
 -----------
 There are several, controller-dependent options when you have generated a gcode file and wish to run it on your machine. For Marlin-driven machines, Cylone has a command for streaming the gcode to the controller and displaying the progress in a terminal. The syntax for this command is:
 ```
@@ -123,47 +160,6 @@ Cyclone is released under the GNU GPL v3 license. The source code is distributed
 
 Contributing
 ------------
-Cyclone is mostly purpose-built for my filament winder, but contributions are welcome if you find it useful and have ideas for improvements. Some larger projects could include adding support for 4 axis winders and tapered parts, the creation of a GUI, and generalization to support more winders/controllers.
+Cyclone is mostly purpose-built for my filament winder, but contributions are welcome if you find it useful and have ideas for improvements. Some larger projects could include adding support for 4 axis winders and tapered parts, and generalization to support more winders/controllers.
 
 
-{
-    "layers": [
-	  {
-            "windType": "helical",
-            "windAngle": 45,
-            "patternNumber": 2,
-            "skipIndex": 1,
-            "lockDegrees": 720,
-            "leadInMM": 30,
-            "leadOutDegrees": 90,
-            "skipInitialNearLock": true
-        },
-        {
-            "windType": "hoop",
-            "terminal": false
-        },
-	{
-            "windType": "hoop",
-            "terminal": false
-        },
-        {
-            "windType": "helical",
-            "windAngle": 45,
-            "patternNumber": 2,
-            "skipIndex": 1,
-            "lockDegrees": 720,
-            "leadInMM": 30,
-            "leadOutDegrees": 90,
-            "skipInitialNearLock": true
-        }
-    ],
-    "mandrelParameters": {
-        "diameter": 60,
-        "windLength": 590
-    },
-    "towParameters": {
-        "width": 7,
-        "thickness": 0.5
-    },
-    "defaultFeedRate": 500
-}
