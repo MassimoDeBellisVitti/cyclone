@@ -5,19 +5,52 @@ Overview
 --------
 Cyclone is a script for generating and executing filament winding toolpaths. It was written for simple, 3-axis machines, (like my [Contraption](https://reilley.net/winder)) and currently only supports winding onto cylindrical mandrels. The gcode that it generates should work with many CNC controllers, but my machine utilizes a low-cost 3D printer main board running [Marlin](https://github.com/MarlinFirmware/Marlin) and the output may need to be modified slightly for other boards.
 
-Download and Setup
+
+ Modifications Implemented
+---
+In this fork, modifications were introduced to adapt the generated G-code to our custom filament winding machine.  
+Originally, the Cyclone script was **splitting each motion command into multiple smaller coordinate moves**, which caused **jittering during the winding process** on our controller.
+
+To fix this issue, the motion generation logic was modified to:
+- merge continuous move segments into single, smoother G-code lines;
+- reduce command fragmentation for more fluid machine motion;
+- maintain the same winding precision while avoiding mechanical vibrations.
+
+These changes ensure that the generated G-code is fully compatible with our machine architecture and results in smoother and more stable winding execution.
+
+---
+
+Deprecated (legacy method) Download and Setup 
 -------
 Cyclone is currently provided ony as the source code, which can be cloned or downloaded from this repository. The script requires [node.js](https://nodejs.org/)) to run. Once node.js is installed and Cyclone is downloaded, navigate to the Cyclone directory in a terminal and install its dependencies with: 
 ```
 npm install canvas
 npm i
 ```
+New — Electron Standalone Application
+In this fork, we developed a **graphical interface (GUI)** based on Electron that integrates all the features of Cyclone,  
+allowing users to generate and execute filament winding G-code without relying on command-line scripts.
+
+Features:
+- Load and edit `.wind` configuration files interactively  
+- Generate and export G-code toolpaths  
+- Stream G-code directly to the controller  
+- Run natively on macOS, Windows, and Linux
+
+Build Instructions:
+After cloning this repository and installing dependencies as above, run:
+npm start
+npm run make
+
+The generated standalone application will be located inside the `out/make/` directory.
+
+*(This Electron integration is a custom addition introduced in this fork and is not part of the original Cyclone project.)*
 
 Machine Configuration
 -------
 Future releases of Cyclone might include the ability to specify which gcode axis each machine axis is connected to, but for now, it is hardcoded to match my machine. The X axis is carriage movement, the Y axis is mandrel rotation, and the Z axis is delivery head rotation. Carriage coordinates are given in millimeters, so tune your steps/mm as usual for the X axis. The mandrel and delivery head are both rotational, which is not typical for the 3D printers that Marlin usually drives. The output for these axes is degrees rather than millimeters, so when configuring them, set the steps/mm to the steps/degree value from the motor manufacturer, also factoring in any gear ratios such that `Y360` produces a single complete mandrel rotation. 
 
-Generating a Toolpath
+Deprecated (legacy method) Generating a Toolpath
 -----------
 The command for generating a gcode file with Cyclone is:
 ```
